@@ -91,6 +91,13 @@ const (
 	TPM2_HT_PERSISTENT     HandleType = 0x81
 )
 
+// Handle mask, range and shift values.
+const (
+	TPM2_HR_HANDLE_MASK uint32 = 0x00FFFFFF
+	TPM2_HR_RANGE_MASK  uint32 = 0xFF000000
+	TPM2_HR_SHIFT       uint32 = 24
+)
+
 // Capability constants.
 const (
 	TPM2_CAP_FIRST           Capability = 0x00000000
@@ -449,6 +456,16 @@ func (c *Capability) UnmarshalJSON(b []byte) error {
 	*c = v
 
 	return nil
+}
+
+// HandleType returns the type of a handle.
+func (h Handle) HandleType() HandleType {
+	return HandleType((uint32(h) & TPM2_HR_RANGE_MASK) >> TPM2_HR_SHIFT)
+}
+
+// First returns the first possible handle value of the type.
+func (t HandleType) First() Handle {
+	return Handle(uint32(t) << TPM2_HR_SHIFT)
 }
 
 // String returns a string representation of a value.

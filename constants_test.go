@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/paulgriffiths/pgtpm"
@@ -358,6 +359,74 @@ func TestCapabilityUnmarshalJSON(t *testing.T) {
 
 			if got != tc.want {
 				t.Errorf("got %d, want %d", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestHandleHandleType(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		value pgtpm.Handle
+		want  pgtpm.HandleType
+	}{
+		{
+			value: 0x00000001,
+			want:  pgtpm.TPM2_HT_PCR,
+		},
+		{
+			value: 0x01000001,
+			want:  pgtpm.TPM2_HT_NV_INDEX,
+		},
+		{
+			value: 0x40000001,
+			want:  pgtpm.TPM2_HT_PERMANENT,
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(fmt.Sprintf("0x%08x", tc.value), func(t *testing.T) {
+			t.Parallel()
+
+			if got := tc.value.HandleType(); got != tc.want {
+				t.Errorf("got %s, want %s", got.String(), tc.want.String())
+			}
+		})
+	}
+}
+
+func TestHandleTypeFirst(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		value pgtpm.HandleType
+		want  pgtpm.Handle
+	}{
+		{
+			value: pgtpm.TPM2_HT_PCR,
+			want:  0x00000000,
+		},
+		{
+			value: pgtpm.TPM2_HT_NV_INDEX,
+			want:  0x01000000,
+		},
+		{
+			value: pgtpm.TPM2_HT_PERMANENT,
+			want:  0x40000000,
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.value.String(), func(t *testing.T) {
+			t.Parallel()
+
+			if got := tc.value.First(); got != tc.want {
+				t.Errorf("got 0x%08x, want 0x%08x", got, tc.want)
 			}
 		})
 	}
