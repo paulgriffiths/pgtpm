@@ -14,6 +14,9 @@ type AlgorithmAttribute uint32
 // Capability is a UINT32 TPM2_CAP Constant.
 type Capability uint32
 
+// Command is a TPM2_CC Constant.
+type Command uint32
+
 // Handle is a handle value.
 type Handle uint32
 
@@ -112,6 +115,127 @@ const (
 	TPM2_CAP_ECC_CURVES      Capability = 0x00000008
 	TPM2_CAP_LAST            Capability = 0x00000008
 	TPM2_CAP_VENDOR_PROPERTY Capability = 0x00000100
+)
+
+// Command constants.
+const (
+	TPM2_CC_NV_UndefineSpaceSpecial    Command = 0x0000011f
+	TPM2_CC_EvictControl               Command = 0x00000120
+	TPM2_CC_HierarchyControl           Command = 0x00000121
+	TPM2_CC_NV_UndefineSpace           Command = 0x00000122
+	TPM2_CC_ChangeEPS                  Command = 0x00000124
+	TPM2_CC_ChangePPS                  Command = 0x00000125
+	TPM2_CC_Clear                      Command = 0x00000126
+	TPM2_CC_ClearControl               Command = 0x00000127
+	TPM2_CC_ClockSet                   Command = 0x00000128
+	TPM2_CC_HierarchyChangeAuth        Command = 0x00000129
+	TPM2_CC_NV_DefineSpace             Command = 0x0000012a
+	TPM2_CC_PCR_Allocate               Command = 0x0000012b
+	TPM2_CC_PCR_SetAuthPolicy          Command = 0x0000012c
+	TPM2_CC_PP_Commands                Command = 0x0000012d
+	TPM2_CC_SetPrimaryPolicy           Command = 0x0000012e
+	TPM2_CC_FieldUpgradeStart          Command = 0x0000012f
+	TPM2_CC_ClockRateAdjust            Command = 0x00000130
+	TPM2_CC_CreatePrimary              Command = 0x00000131
+	TPM2_CC_NV_GlobalWriteLock         Command = 0x00000132
+	TPM2_CC_GetCommandAuditDigest      Command = 0x00000133
+	TPM2_CC_NV_Increment               Command = 0x00000134
+	TPM2_CC_NV_SetBits                 Command = 0x00000135
+	TPM2_CC_NV_Extend                  Command = 0x00000136
+	TPM2_CC_NV_Write                   Command = 0x00000137
+	TPM2_CC_NV_WriteLock               Command = 0x00000138
+	TPM2_CC_DictionaryAttackLockReset  Command = 0x00000139
+	TPM2_CC_DictionaryAttackParameters Command = 0x0000013a
+	TPM2_CC_NV_ChangeAuth              Command = 0x0000013b
+	TPM2_CC_PCR_Event                  Command = 0x0000013c
+	TPM2_CC_PCR_Reset                  Command = 0x0000013d
+	TPM2_CC_SequenceComplete           Command = 0x0000013e
+	TPM2_CC_SetAlgorithmSet            Command = 0x0000013f
+	TPM2_CC_SetCommandCodeAuditStatus  Command = 0x00000140
+	TPM2_CC_FieldUpgradeData           Command = 0x00000141
+	TPM2_CC_IncrementalSelfTest        Command = 0x00000142
+	TPM2_CC_SelfTest                   Command = 0x00000143
+	TPM2_CC_Startup                    Command = 0x00000144
+	TPM2_CC_Shutdown                   Command = 0x00000145
+	TPM2_CC_StirRandom                 Command = 0x00000146
+	TPM2_CC_ActivateCredential         Command = 0x00000147
+	TPM2_CC_Certify                    Command = 0x00000148
+	TPM2_CC_PolicyNV                   Command = 0x00000149
+	TPM2_CC_CertifyCreation            Command = 0x0000014a
+	TPM2_CC_Duplicate                  Command = 0x0000014b
+	TPM2_CC_GetTime                    Command = 0x0000014c
+	TPM2_CC_GetSessionAuditDigest      Command = 0x0000014d
+	TPM2_CC_NV_Read                    Command = 0x0000014e
+	TPM2_CC_NV_ReadLock                Command = 0x0000014f
+	TPM2_CC_ObjectChangeAuth           Command = 0x00000150
+	TPM2_CC_PolicySecret               Command = 0x00000151
+	TPM2_CC_Rewrap                     Command = 0x00000152
+	TPM2_CC_Create                     Command = 0x00000153
+	TPM2_CC_ECDH_ZGen                  Command = 0x00000154
+	TPM2_CC_HMAC                       Command = 0x00000155
+	TPM2_CC_Import                     Command = 0x00000156
+	TPM2_CC_Load                       Command = 0x00000157
+	TPM2_CC_Quote                      Command = 0x00000158
+	TPM2_CC_RSA_Decrypt                Command = 0x00000159
+	TPM2_CC_HMAC_Start                 Command = 0x0000015b
+	TPM2_CC_SequenceUpdate             Command = 0x0000015c
+	TPM2_CC_Sign                       Command = 0x0000015d
+	TPM2_CC_Unseal                     Command = 0x0000015e
+	TPM2_CC_PolicySigned               Command = 0x00000160
+	TPM2_CC_ContextLoad                Command = 0x00000161
+	TPM2_CC_ContextSave                Command = 0x00000162
+	TPM2_CC_ECDH_KeyGen                Command = 0x00000163
+	TPM2_CC_EncryptDecrypt             Command = 0x00000164
+	TPM2_CC_FlushContext               Command = 0x00000165
+	TPM2_CC_LoadExternal               Command = 0x00000167
+	TPM2_CC_MakeCredential             Command = 0x00000168
+	TPM2_CC_NV_ReadPublic              Command = 0x00000169
+	TPM2_CC_PolicyAuthorize            Command = 0x0000016a
+	TPM2_CC_PolicyAuthValue            Command = 0x0000016b
+	TPM2_CC_PolicyCommandCode          Command = 0x0000016c
+	TPM2_CC_PolicyCounterTimer         Command = 0x0000016d
+	TPM2_CC_PolicyCpHash               Command = 0x0000016e
+	TPM2_CC_PolicyLocality             Command = 0x0000016f
+	TPM2_CC_PolicyNameHash             Command = 0x00000170
+	TPM2_CC_PolicyOR                   Command = 0x00000171
+	TPM2_CC_PolicyTicket               Command = 0x00000172
+	TPM2_CC_ReadPublic                 Command = 0x00000173
+	TPM2_CC_RSA_Encrypt                Command = 0x00000174
+	TPM2_CC_StartAuthSession           Command = 0x00000176
+	TPM2_CC_VerifySignature            Command = 0x00000177
+	TPM2_CC_ECC_Parameters             Command = 0x00000178
+	TPM2_CC_FirmwareRead               Command = 0x00000179
+	TPM2_CC_GetCapability              Command = 0x0000017a
+	TPM2_CC_GetRandom                  Command = 0x0000017b
+	TPM2_CC_GetTestResult              Command = 0x0000017c
+	TPM2_CC_Hash                       Command = 0x0000017d
+	TPM2_CC_PCR_Read                   Command = 0x0000017e
+	TPM2_CC_PolicyPCR                  Command = 0x0000017f
+	TPM2_CC_PolicyRestart              Command = 0x00000180
+	TPM2_CC_ReadClock                  Command = 0x00000181
+	TPM2_CC_PCR_Extend                 Command = 0x00000182
+	TPM2_CC_PCR_SetAuthValue           Command = 0x00000183
+	TPM2_CC_NV_Certify                 Command = 0x00000184
+	TPM2_CC_EventSequenceComplete      Command = 0x00000185
+	TPM2_CC_HashSequenceStart          Command = 0x00000186
+	TPM2_CC_PolicyPhysicalPresence     Command = 0x00000187
+	TPM2_CC_PolicyDuplicationSelect    Command = 0x00000188
+	TPM2_CC_PolicyGetDigest            Command = 0x00000189
+	TPM2_CC_TestParms                  Command = 0x0000018a
+	TPM2_CC_Commit                     Command = 0x0000018b
+	TPM2_CC_PolicyPassword             Command = 0x0000018c
+	TPM2_CC_ZGen_2Phase                Command = 0x0000018d
+	TPM2_CC_EC_Ephemeral               Command = 0x0000018e
+	TPM2_CC_PolicyNvWritten            Command = 0x0000018f
+	TPM2_CC_PolicyTemplate             Command = 0x00000190
+	TPM2_CC_CreateLoaded               Command = 0x00000191
+	TPM2_CC_PolicyAuthorizeNV          Command = 0x00000192
+	TPM2_CC_EncryptDecrypt2            Command = 0x00000193
+	TPM2_CC_AC_GetCapability           Command = 0x00000194
+	TPM2_CC_AC_Send                    Command = 0x00000195
+	TPM2_CC_Policy_AC_SendSelect       Command = 0x00000196
+	TPM2_CC_LAST                       Command = 0x00000196
+	TPM2_CC_Vendor_TCG_Test            Command = 0x20000000
 )
 
 // Object attribute constants.
@@ -289,6 +413,246 @@ var stringToCap = map[string]Capability{
 	"TPM2_CAP_VENDOR_PROPERTY": TPM2_CAP_VENDOR_PROPERTY,
 }
 
+// cmdToString maps Command values to their string representations.
+var cmdToString = map[Command]string{
+	TPM2_CC_NV_UndefineSpaceSpecial:    "TPM2_CC_NV_UndefineSpaceSpecial",
+	TPM2_CC_EvictControl:               "TPM2_CC_EvictControl",
+	TPM2_CC_HierarchyControl:           "TPM2_CC_HierarchyControl",
+	TPM2_CC_NV_UndefineSpace:           "TPM2_CC_NV_UndefineSpace",
+	TPM2_CC_ChangeEPS:                  "TPM2_CC_ChangeEPS",
+	TPM2_CC_ChangePPS:                  "TPM2_CC_ChangePPS",
+	TPM2_CC_Clear:                      "TPM2_CC_Clear",
+	TPM2_CC_ClearControl:               "TPM2_CC_ClearControl",
+	TPM2_CC_ClockSet:                   "TPM2_CC_ClockSet",
+	TPM2_CC_HierarchyChangeAuth:        "TPM2_CC_HierarchyChangeAuth",
+	TPM2_CC_NV_DefineSpace:             "TPM2_CC_NV_DefineSpace",
+	TPM2_CC_PCR_Allocate:               "TPM2_CC_PCR_Allocate",
+	TPM2_CC_PCR_SetAuthPolicy:          "TPM2_CC_PCR_SetAuthPolicy",
+	TPM2_CC_PP_Commands:                "TPM2_CC_PP_Commands",
+	TPM2_CC_SetPrimaryPolicy:           "TPM2_CC_SetPrimaryPolicy",
+	TPM2_CC_FieldUpgradeStart:          "TPM2_CC_FieldUpgradeStart",
+	TPM2_CC_ClockRateAdjust:            "TPM2_CC_ClockRateAdjust",
+	TPM2_CC_CreatePrimary:              "TPM2_CC_CreatePrimary",
+	TPM2_CC_NV_GlobalWriteLock:         "TPM2_CC_NV_GlobalWriteLock",
+	TPM2_CC_GetCommandAuditDigest:      "TPM2_CC_GetCommandAuditDigest",
+	TPM2_CC_NV_Increment:               "TPM2_CC_NV_Increment",
+	TPM2_CC_NV_SetBits:                 "TPM2_CC_NV_SetBits",
+	TPM2_CC_NV_Extend:                  "TPM2_CC_NV_Extend",
+	TPM2_CC_NV_Write:                   "TPM2_CC_NV_Write",
+	TPM2_CC_NV_WriteLock:               "TPM2_CC_NV_WriteLock",
+	TPM2_CC_DictionaryAttackLockReset:  "TPM2_CC_DictionaryAttackLockReset",
+	TPM2_CC_DictionaryAttackParameters: "TPM2_CC_DictionaryAttackParameters",
+	TPM2_CC_NV_ChangeAuth:              "TPM2_CC_NV_ChangeAuth",
+	TPM2_CC_PCR_Event:                  "TPM2_CC_PCR_Event",
+	TPM2_CC_PCR_Reset:                  "TPM2_CC_PCR_Reset",
+	TPM2_CC_SequenceComplete:           "TPM2_CC_SequenceComplete",
+	TPM2_CC_SetAlgorithmSet:            "TPM2_CC_SetAlgorithmSet",
+	TPM2_CC_SetCommandCodeAuditStatus:  "TPM2_CC_SetCommandCodeAuditStatus",
+	TPM2_CC_FieldUpgradeData:           "TPM2_CC_FieldUpgradeData",
+	TPM2_CC_IncrementalSelfTest:        "TPM2_CC_IncrementalSelfTest",
+	TPM2_CC_SelfTest:                   "TPM2_CC_SelfTest",
+	TPM2_CC_Startup:                    "TPM2_CC_Startup",
+	TPM2_CC_Shutdown:                   "TPM2_CC_Shutdown",
+	TPM2_CC_StirRandom:                 "TPM2_CC_StirRandom",
+	TPM2_CC_ActivateCredential:         "TPM2_CC_ActivateCredential",
+	TPM2_CC_Certify:                    "TPM2_CC_Certify",
+	TPM2_CC_PolicyNV:                   "TPM2_CC_PolicyNV",
+	TPM2_CC_CertifyCreation:            "TPM2_CC_CertifyCreation",
+	TPM2_CC_Duplicate:                  "TPM2_CC_Duplicate",
+	TPM2_CC_GetTime:                    "TPM2_CC_GetTime",
+	TPM2_CC_GetSessionAuditDigest:      "TPM2_CC_GetSessionAuditDigest",
+	TPM2_CC_NV_Read:                    "TPM2_CC_NV_Read",
+	TPM2_CC_NV_ReadLock:                "TPM2_CC_NV_ReadLock",
+	TPM2_CC_ObjectChangeAuth:           "TPM2_CC_ObjectChangeAuth",
+	TPM2_CC_PolicySecret:               "TPM2_CC_PolicySecret",
+	TPM2_CC_Rewrap:                     "TPM2_CC_Rewrap",
+	TPM2_CC_Create:                     "TPM2_CC_Create",
+	TPM2_CC_ECDH_ZGen:                  "TPM2_CC_ECDH_ZGen",
+	TPM2_CC_HMAC:                       "TPM2_CC_HMAC",
+	TPM2_CC_Import:                     "TPM2_CC_Import",
+	TPM2_CC_Load:                       "TPM2_CC_Load",
+	TPM2_CC_Quote:                      "TPM2_CC_Quote",
+	TPM2_CC_RSA_Decrypt:                "TPM2_CC_RSA_Decrypt",
+	TPM2_CC_HMAC_Start:                 "TPM2_CC_HMAC_Start",
+	TPM2_CC_SequenceUpdate:             "TPM2_CC_SequenceUpdate",
+	TPM2_CC_Sign:                       "TPM2_CC_Sign",
+	TPM2_CC_Unseal:                     "TPM2_CC_Unseal",
+	TPM2_CC_PolicySigned:               "TPM2_CC_PolicySigned",
+	TPM2_CC_ContextLoad:                "TPM2_CC_ContextLoad",
+	TPM2_CC_ContextSave:                "TPM2_CC_ContextSave",
+	TPM2_CC_ECDH_KeyGen:                "TPM2_CC_ECDH_KeyGen",
+	TPM2_CC_EncryptDecrypt:             "TPM2_CC_EncryptDecrypt",
+	TPM2_CC_FlushContext:               "TPM2_CC_FlushContext",
+	TPM2_CC_LoadExternal:               "TPM2_CC_LoadExternal",
+	TPM2_CC_MakeCredential:             "TPM2_CC_MakeCredential",
+	TPM2_CC_NV_ReadPublic:              "TPM2_CC_NV_ReadPublic",
+	TPM2_CC_PolicyAuthorize:            "TPM2_CC_PolicyAuthorize",
+	TPM2_CC_PolicyAuthValue:            "TPM2_CC_PolicyAuthValue",
+	TPM2_CC_PolicyCommandCode:          "TPM2_CC_PolicyCommandCode",
+	TPM2_CC_PolicyCounterTimer:         "TPM2_CC_PolicyCounterTimer",
+	TPM2_CC_PolicyCpHash:               "TPM2_CC_PolicyCpHash",
+	TPM2_CC_PolicyLocality:             "TPM2_CC_PolicyLocality",
+	TPM2_CC_PolicyNameHash:             "TPM2_CC_PolicyNameHash",
+	TPM2_CC_PolicyOR:                   "TPM2_CC_PolicyOR",
+	TPM2_CC_PolicyTicket:               "TPM2_CC_PolicyTicket",
+	TPM2_CC_ReadPublic:                 "TPM2_CC_ReadPublic",
+	TPM2_CC_RSA_Encrypt:                "TPM2_CC_RSA_Encrypt",
+	TPM2_CC_StartAuthSession:           "TPM2_CC_StartAuthSession",
+	TPM2_CC_VerifySignature:            "TPM2_CC_VerifySignature",
+	TPM2_CC_ECC_Parameters:             "TPM2_CC_ECC_Parameters",
+	TPM2_CC_FirmwareRead:               "TPM2_CC_FirmwareRead",
+	TPM2_CC_GetCapability:              "TPM2_CC_GetCapability",
+	TPM2_CC_GetRandom:                  "TPM2_CC_GetRandom",
+	TPM2_CC_GetTestResult:              "TPM2_CC_GetTestResult",
+	TPM2_CC_Hash:                       "TPM2_CC_Hash",
+	TPM2_CC_PCR_Read:                   "TPM2_CC_PCR_Read",
+	TPM2_CC_PolicyPCR:                  "TPM2_CC_PolicyPCR",
+	TPM2_CC_PolicyRestart:              "TPM2_CC_PolicyRestart",
+	TPM2_CC_ReadClock:                  "TPM2_CC_ReadClock",
+	TPM2_CC_PCR_Extend:                 "TPM2_CC_PCR_Extend",
+	TPM2_CC_PCR_SetAuthValue:           "TPM2_CC_PCR_SetAuthValue",
+	TPM2_CC_NV_Certify:                 "TPM2_CC_NV_Certify",
+	TPM2_CC_EventSequenceComplete:      "TPM2_CC_EventSequenceComplete",
+	TPM2_CC_HashSequenceStart:          "TPM2_CC_HashSequenceStart",
+	TPM2_CC_PolicyPhysicalPresence:     "TPM2_CC_PolicyPhysicalPresence",
+	TPM2_CC_PolicyDuplicationSelect:    "TPM2_CC_PolicyDuplicationSelect",
+	TPM2_CC_PolicyGetDigest:            "TPM2_CC_PolicyGetDigest",
+	TPM2_CC_TestParms:                  "TPM2_CC_TestParms",
+	TPM2_CC_Commit:                     "TPM2_CC_Commit",
+	TPM2_CC_PolicyPassword:             "TPM2_CC_PolicyPassword",
+	TPM2_CC_ZGen_2Phase:                "TPM2_CC_ZGen_2Phase",
+	TPM2_CC_EC_Ephemeral:               "TPM2_CC_EC_Ephemeral",
+	TPM2_CC_PolicyNvWritten:            "TPM2_CC_PolicyNvWritten",
+	TPM2_CC_PolicyTemplate:             "TPM2_CC_PolicyTemplate",
+	TPM2_CC_CreateLoaded:               "TPM2_CC_CreateLoaded",
+	TPM2_CC_PolicyAuthorizeNV:          "TPM2_CC_PolicyAuthorizeNV",
+	TPM2_CC_EncryptDecrypt2:            "TPM2_CC_EncryptDecrypt2",
+	TPM2_CC_AC_GetCapability:           "TPM2_CC_AC_GetCapability",
+	TPM2_CC_AC_Send:                    "TPM2_CC_AC_Send",
+	TPM2_CC_Policy_AC_SendSelect:       "TPM2_CC_Policy_AC_SendSelect",
+	TPM2_CC_Vendor_TCG_Test:            "TPM2_CC_Vendor_TCG_Test",
+}
+
+// stringToCmd maps Command string representations to their values.
+var stringToCmd = map[string]Command{
+	"TPM2_CC_NV_UndefineSpaceSpecial":    TPM2_CC_NV_UndefineSpaceSpecial,
+	"TPM2_CC_EvictControl":               TPM2_CC_EvictControl,
+	"TPM2_CC_HierarchyControl":           TPM2_CC_HierarchyControl,
+	"TPM2_CC_NV_UndefineSpace":           TPM2_CC_NV_UndefineSpace,
+	"TPM2_CC_ChangeEPS":                  TPM2_CC_ChangeEPS,
+	"TPM2_CC_ChangePPS":                  TPM2_CC_ChangePPS,
+	"TPM2_CC_Clear":                      TPM2_CC_Clear,
+	"TPM2_CC_ClearControl":               TPM2_CC_ClearControl,
+	"TPM2_CC_ClockSet":                   TPM2_CC_ClockSet,
+	"TPM2_CC_HierarchyChangeAuth":        TPM2_CC_HierarchyChangeAuth,
+	"TPM2_CC_NV_DefineSpace":             TPM2_CC_NV_DefineSpace,
+	"TPM2_CC_PCR_Allocate":               TPM2_CC_PCR_Allocate,
+	"TPM2_CC_PCR_SetAuthPolicy":          TPM2_CC_PCR_SetAuthPolicy,
+	"TPM2_CC_PP_Commands":                TPM2_CC_PP_Commands,
+	"TPM2_CC_SetPrimaryPolicy":           TPM2_CC_SetPrimaryPolicy,
+	"TPM2_CC_FieldUpgradeStart":          TPM2_CC_FieldUpgradeStart,
+	"TPM2_CC_ClockRateAdjust":            TPM2_CC_ClockRateAdjust,
+	"TPM2_CC_CreatePrimary":              TPM2_CC_CreatePrimary,
+	"TPM2_CC_NV_GlobalWriteLock":         TPM2_CC_NV_GlobalWriteLock,
+	"TPM2_CC_GetCommandAuditDigest":      TPM2_CC_GetCommandAuditDigest,
+	"TPM2_CC_NV_Increment":               TPM2_CC_NV_Increment,
+	"TPM2_CC_NV_SetBits":                 TPM2_CC_NV_SetBits,
+	"TPM2_CC_NV_Extend":                  TPM2_CC_NV_Extend,
+	"TPM2_CC_NV_Write":                   TPM2_CC_NV_Write,
+	"TPM2_CC_NV_WriteLock":               TPM2_CC_NV_WriteLock,
+	"TPM2_CC_DictionaryAttackLockReset":  TPM2_CC_DictionaryAttackLockReset,
+	"TPM2_CC_DictionaryAttackParameters": TPM2_CC_DictionaryAttackParameters,
+	"TPM2_CC_NV_ChangeAuth":              TPM2_CC_NV_ChangeAuth,
+	"TPM2_CC_PCR_Event":                  TPM2_CC_PCR_Event,
+	"TPM2_CC_PCR_Reset":                  TPM2_CC_PCR_Reset,
+	"TPM2_CC_SequenceComplete":           TPM2_CC_SequenceComplete,
+	"TPM2_CC_SetAlgorithmSet":            TPM2_CC_SetAlgorithmSet,
+	"TPM2_CC_SetCommandCodeAuditStatus":  TPM2_CC_SetCommandCodeAuditStatus,
+	"TPM2_CC_FieldUpgradeData":           TPM2_CC_FieldUpgradeData,
+	"TPM2_CC_IncrementalSelfTest":        TPM2_CC_IncrementalSelfTest,
+	"TPM2_CC_SelfTest":                   TPM2_CC_SelfTest,
+	"TPM2_CC_Startup":                    TPM2_CC_Startup,
+	"TPM2_CC_Shutdown":                   TPM2_CC_Shutdown,
+	"TPM2_CC_StirRandom":                 TPM2_CC_StirRandom,
+	"TPM2_CC_ActivateCredential":         TPM2_CC_ActivateCredential,
+	"TPM2_CC_Certify":                    TPM2_CC_Certify,
+	"TPM2_CC_PolicyNV":                   TPM2_CC_PolicyNV,
+	"TPM2_CC_CertifyCreation":            TPM2_CC_CertifyCreation,
+	"TPM2_CC_Duplicate":                  TPM2_CC_Duplicate,
+	"TPM2_CC_GetTime":                    TPM2_CC_GetTime,
+	"TPM2_CC_GetSessionAuditDigest":      TPM2_CC_GetSessionAuditDigest,
+	"TPM2_CC_NV_Read":                    TPM2_CC_NV_Read,
+	"TPM2_CC_NV_ReadLock":                TPM2_CC_NV_ReadLock,
+	"TPM2_CC_ObjectChangeAuth":           TPM2_CC_ObjectChangeAuth,
+	"TPM2_CC_PolicySecret":               TPM2_CC_PolicySecret,
+	"TPM2_CC_Rewrap":                     TPM2_CC_Rewrap,
+	"TPM2_CC_Create":                     TPM2_CC_Create,
+	"TPM2_CC_ECDH_ZGen":                  TPM2_CC_ECDH_ZGen,
+	"TPM2_CC_HMAC":                       TPM2_CC_HMAC,
+	"TPM2_CC_Import":                     TPM2_CC_Import,
+	"TPM2_CC_Load":                       TPM2_CC_Load,
+	"TPM2_CC_Quote":                      TPM2_CC_Quote,
+	"TPM2_CC_RSA_Decrypt":                TPM2_CC_RSA_Decrypt,
+	"TPM2_CC_HMAC_Start":                 TPM2_CC_HMAC_Start,
+	"TPM2_CC_SequenceUpdate":             TPM2_CC_SequenceUpdate,
+	"TPM2_CC_Sign":                       TPM2_CC_Sign,
+	"TPM2_CC_Unseal":                     TPM2_CC_Unseal,
+	"TPM2_CC_PolicySigned":               TPM2_CC_PolicySigned,
+	"TPM2_CC_ContextLoad":                TPM2_CC_ContextLoad,
+	"TPM2_CC_ContextSave":                TPM2_CC_ContextSave,
+	"TPM2_CC_ECDH_KeyGen":                TPM2_CC_ECDH_KeyGen,
+	"TPM2_CC_EncryptDecrypt":             TPM2_CC_EncryptDecrypt,
+	"TPM2_CC_FlushContext":               TPM2_CC_FlushContext,
+	"TPM2_CC_LoadExternal":               TPM2_CC_LoadExternal,
+	"TPM2_CC_MakeCredential":             TPM2_CC_MakeCredential,
+	"TPM2_CC_NV_ReadPublic":              TPM2_CC_NV_ReadPublic,
+	"TPM2_CC_PolicyAuthorize":            TPM2_CC_PolicyAuthorize,
+	"TPM2_CC_PolicyAuthValue":            TPM2_CC_PolicyAuthValue,
+	"TPM2_CC_PolicyCommandCode":          TPM2_CC_PolicyCommandCode,
+	"TPM2_CC_PolicyCounterTimer":         TPM2_CC_PolicyCounterTimer,
+	"TPM2_CC_PolicyCpHash":               TPM2_CC_PolicyCpHash,
+	"TPM2_CC_PolicyLocality":             TPM2_CC_PolicyLocality,
+	"TPM2_CC_PolicyNameHash":             TPM2_CC_PolicyNameHash,
+	"TPM2_CC_PolicyOR":                   TPM2_CC_PolicyOR,
+	"TPM2_CC_PolicyTicket":               TPM2_CC_PolicyTicket,
+	"TPM2_CC_ReadPublic":                 TPM2_CC_ReadPublic,
+	"TPM2_CC_RSA_Encrypt":                TPM2_CC_RSA_Encrypt,
+	"TPM2_CC_StartAuthSession":           TPM2_CC_StartAuthSession,
+	"TPM2_CC_VerifySignature":            TPM2_CC_VerifySignature,
+	"TPM2_CC_ECC_Parameters":             TPM2_CC_ECC_Parameters,
+	"TPM2_CC_FirmwareRead":               TPM2_CC_FirmwareRead,
+	"TPM2_CC_GetCapability":              TPM2_CC_GetCapability,
+	"TPM2_CC_GetRandom":                  TPM2_CC_GetRandom,
+	"TPM2_CC_GetTestResult":              TPM2_CC_GetTestResult,
+	"TPM2_CC_Hash":                       TPM2_CC_Hash,
+	"TPM2_CC_PCR_Read":                   TPM2_CC_PCR_Read,
+	"TPM2_CC_PolicyPCR":                  TPM2_CC_PolicyPCR,
+	"TPM2_CC_PolicyRestart":              TPM2_CC_PolicyRestart,
+	"TPM2_CC_ReadClock":                  TPM2_CC_ReadClock,
+	"TPM2_CC_PCR_Extend":                 TPM2_CC_PCR_Extend,
+	"TPM2_CC_PCR_SetAuthValue":           TPM2_CC_PCR_SetAuthValue,
+	"TPM2_CC_NV_Certify":                 TPM2_CC_NV_Certify,
+	"TPM2_CC_EventSequenceComplete":      TPM2_CC_EventSequenceComplete,
+	"TPM2_CC_HashSequenceStart":          TPM2_CC_HashSequenceStart,
+	"TPM2_CC_PolicyPhysicalPresence":     TPM2_CC_PolicyPhysicalPresence,
+	"TPM2_CC_PolicyDuplicationSelect":    TPM2_CC_PolicyDuplicationSelect,
+	"TPM2_CC_PolicyGetDigest":            TPM2_CC_PolicyGetDigest,
+	"TPM2_CC_TestParms":                  TPM2_CC_TestParms,
+	"TPM2_CC_Commit":                     TPM2_CC_Commit,
+	"TPM2_CC_PolicyPassword":             TPM2_CC_PolicyPassword,
+	"TPM2_CC_ZGen_2Phase":                TPM2_CC_ZGen_2Phase,
+	"TPM2_CC_EC_Ephemeral":               TPM2_CC_EC_Ephemeral,
+	"TPM2_CC_PolicyNvWritten":            TPM2_CC_PolicyNvWritten,
+	"TPM2_CC_PolicyTemplate":             TPM2_CC_PolicyTemplate,
+	"TPM2_CC_CreateLoaded":               TPM2_CC_CreateLoaded,
+	"TPM2_CC_PolicyAuthorizeNV":          TPM2_CC_PolicyAuthorizeNV,
+	"TPM2_CC_EncryptDecrypt2":            TPM2_CC_EncryptDecrypt2,
+	"TPM2_CC_AC_GetCapability":           TPM2_CC_AC_GetCapability,
+	"TPM2_CC_AC_Send":                    TPM2_CC_AC_Send,
+	"TPM2_CC_Policy_AC_SendSelect":       TPM2_CC_Policy_AC_SendSelect,
+	"TPM2_CC_Vendor_TCG_Test":            TPM2_CC_Vendor_TCG_Test,
+}
+
 // handleTypeToString maps HandleType values to their string representations.
 var handleTypeToString = map[HandleType]string{
 	TPM2_HT_PCR:            "TPM2_HT_PCR",
@@ -451,6 +815,45 @@ func (c *Capability) UnmarshalJSON(b []byte) error {
 	v, ok := stringToCap[s]
 	if !ok {
 		return fmt.Errorf("invalid capability value: %s", s)
+	}
+
+	*c = v
+
+	return nil
+}
+
+// String returns a string representation of a value.
+func (c Command) String() string {
+	s, ok := cmdToString[c]
+	if !ok {
+		return "UNKNOWN COMMAND VALUE"
+	}
+
+	return s
+}
+
+// MarshalJSON returns the JSON-encoding of a value.
+func (c Command) MarshalJSON() ([]byte, error) {
+	s, ok := cmdToString[c]
+	if !ok {
+		return nil, fmt.Errorf("invalid command value: %d", c)
+	}
+
+	return json.Marshal(s)
+}
+
+// UnmarshalJSON parses a JSON-encoded value and stores the result in the
+// object.
+func (c *Command) UnmarshalJSON(b []byte) error {
+	var s string
+
+	if err := json.Unmarshal(b, &s); err != nil {
+		return err
+	}
+
+	v, ok := stringToCmd[s]
+	if !ok {
+		return fmt.Errorf("invalid command value: %s", s)
 	}
 
 	*c = v
