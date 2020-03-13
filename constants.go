@@ -293,6 +293,17 @@ var handleTypeToString = map[HandleType]string{
 	TPM2_HT_PERSISTENT:     "TPM2_HT_PERSISTENT",
 }
 
+// stringToHandleType maps HandleType string representations to their values.
+var stringToHandleType = map[string]HandleType{
+	"TPM2_HT_PCR":            TPM2_HT_PCR,
+	"TPM2_HT_NV_INDEX":       TPM2_HT_NV_INDEX,
+	"TPM2_HT_HMAC_SESSION":   TPM2_HT_HMAC_SESSION,
+	"TPM2_HT_POLICY_SESSION": TPM2_HT_POLICY_SESSION,
+	"TPM2_HT_PERMANENT":      TPM2_HT_PERMANENT,
+	"TPM2_HT_TRANSIENT":      TPM2_HT_TRANSIENT,
+	"TPM2_HT_PERSISTENT":     TPM2_HT_PERSISTENT,
+}
+
 // objAttrToString maps ObjectAttribute values to their string representations.
 var objAttrToString = map[ObjectAttribute]string{
 	TPMA_OBJECT_FIXEDTPM:             "TPMA_OBJECT_FIXEDTPM",
@@ -436,6 +447,45 @@ func (c *Capability) UnmarshalJSON(b []byte) error {
 	}
 
 	*c = v
+
+	return nil
+}
+
+// String returns a string representation of a value.
+func (t HandleType) String() string {
+	s, ok := handleTypeToString[t]
+	if !ok {
+		return "UNKNOWN HANDLE TYPE VALUE"
+	}
+
+	return s
+}
+
+// MarshalJSON returns the JSON-encoding of a value.
+func (t HandleType) MarshalJSON() ([]byte, error) {
+	s, ok := handleTypeToString[t]
+	if !ok {
+		return nil, fmt.Errorf("invalid handle type value: %d", t)
+	}
+
+	return json.Marshal(s)
+}
+
+// UnmarshalJSON parses a JSON-encoded value and stores the result in the
+// object.
+func (t *HandleType) UnmarshalJSON(b []byte) error {
+	var s string
+
+	if err := json.Unmarshal(b, &s); err != nil {
+		return err
+	}
+
+	v, ok := stringToHandleType[s]
+	if !ok {
+		return fmt.Errorf("invalid handle type value: %s", s)
+	}
+
+	*t = v
 
 	return nil
 }

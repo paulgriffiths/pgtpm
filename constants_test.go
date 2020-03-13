@@ -363,6 +363,124 @@ func TestCapabilityUnmarshalJSON(t *testing.T) {
 	}
 }
 
+func TestHandleTypeString(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name  string
+		value pgtpm.HandleType
+		want  string
+	}{
+		{
+			name:  "Valid",
+			value: pgtpm.TPM2_HT_PERSISTENT,
+			want:  "TPM2_HT_PERSISTENT",
+		},
+		{
+			name:  "Invalid",
+			value: 99999999,
+			want:  "UNKNOWN HANDLE TYPE VALUE",
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tc.value.String(); got != tc.want {
+				t.Errorf("got %s, want %s", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestHandleTypeMarshalJSON(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name  string
+		value pgtpm.HandleType
+		want  []byte
+		err   error
+	}{
+		{
+			name:  "Valid",
+			value: pgtpm.TPM2_HT_PCR,
+			want:  []byte(`"TPM2_HT_PCR"`),
+		},
+		{
+			name:  "Invalid",
+			value: 99999999,
+			err:   errors.New("invalid value"),
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := json.Marshal(tc.value)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
+			}
+
+			if !bytes.Equal(got, tc.want) {
+				t.Errorf("got %s, want %s", string(got), string(tc.want))
+			}
+		})
+	}
+}
+
+func TestHandleTypeUnmarshalJSON(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name  string
+		value []byte
+		want  pgtpm.HandleType
+		err   error
+	}{
+		{
+			name:  "Valid",
+			value: []byte(`"TPM2_HT_NV_INDEX"`),
+			want:  pgtpm.TPM2_HT_NV_INDEX,
+		},
+		{
+			name:  "BadValue",
+			value: []byte(`"NOT_A_VALID_VALUE"`),
+			err:   errors.New("invalid value"),
+		},
+		{
+			name:  "BadType",
+			value: []byte(`false`),
+			err:   errors.New("invalid type"),
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			var got pgtpm.HandleType
+
+			err := json.Unmarshal(tc.value, &got)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
+			}
+
+			if got != tc.want {
+				t.Errorf("got %d, want %d", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestObjectAttributeString(t *testing.T) {
 	t.Parallel()
 
