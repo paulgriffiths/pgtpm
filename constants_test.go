@@ -25,7 +25,7 @@ func TestAlgorithmString(t *testing.T) {
 		},
 		{
 			name:  "Invalid",
-			value: 99999999,
+			value: 9999,
 			want:  "UNKNOWN ALGORITHM VALUE",
 		},
 	}
@@ -59,7 +59,7 @@ func TestAlgorithmMarshalJSON(t *testing.T) {
 		},
 		{
 			name:  "Invalid",
-			value: 99999999,
+			value: 9999,
 			err:   errors.New("invalid value"),
 		},
 	}
@@ -469,6 +469,124 @@ func TestCommandUnmarshalJSON(t *testing.T) {
 			t.Parallel()
 
 			var got pgtpm.Command
+
+			err := json.Unmarshal(tc.value, &got)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
+			}
+
+			if got != tc.want {
+				t.Errorf("got %d, want %d", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestEllipticCurveString(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name  string
+		value pgtpm.EllipticCurve
+		want  string
+	}{
+		{
+			name:  "Valid",
+			value: pgtpm.TPM2_ECC_SM2_P256,
+			want:  "TPM2_ECC_SM2_P256",
+		},
+		{
+			name:  "Invalid",
+			value: 9999,
+			want:  "UNKNOWN ELLIPTIC CURVE VALUE",
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tc.value.String(); got != tc.want {
+				t.Errorf("got %s, want %s", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestEllipticCurveMarshalJSON(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name  string
+		value pgtpm.EllipticCurve
+		want  []byte
+		err   error
+	}{
+		{
+			name:  "Valid",
+			value: pgtpm.TPM2_ECC_BN_P256,
+			want:  []byte(`"TPM2_ECC_BN_P256"`),
+		},
+		{
+			name:  "Invalid",
+			value: 9999,
+			err:   errors.New("invalid value"),
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := json.Marshal(tc.value)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
+			}
+
+			if !bytes.Equal(got, tc.want) {
+				t.Errorf("got %s, want %s", string(got), string(tc.want))
+			}
+		})
+	}
+}
+
+func TestEllipticCurveUnmarshalJSON(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name  string
+		value []byte
+		want  pgtpm.EllipticCurve
+		err   error
+	}{
+		{
+			name:  "Valid",
+			value: []byte(`"TPM2_ECC_NIST_P256"`),
+			want:  pgtpm.TPM2_ECC_NIST_P256,
+		},
+		{
+			name:  "BadValue",
+			value: []byte(`"NOT_A_VALID_VALUE"`),
+			err:   errors.New("invalid value"),
+		},
+		{
+			name:  "BadType",
+			value: []byte(`false`),
+			err:   errors.New("invalid type"),
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			var got pgtpm.EllipticCurve
 
 			err := json.Unmarshal(tc.value, &got)
 			if (err == nil) != (tc.err == nil) {

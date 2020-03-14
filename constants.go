@@ -6,7 +6,7 @@ import (
 )
 
 // Algorithm is a TPM2_ALG_ID Constant.
-type Algorithm uint32
+type Algorithm uint16
 
 // AlgorithmAttribute is a UINT32 TPMA_ALGORITHM Bit Constant.
 type AlgorithmAttribute uint32
@@ -16,6 +16,9 @@ type Capability uint32
 
 // Command is a TPM2_CC Constant.
 type Command uint32
+
+// EllipticCurve is a TPM2_ECC_CURVE Constant.
+type EllipticCurve uint16
 
 // Handle is a handle value.
 type Handle uint32
@@ -79,6 +82,19 @@ const (
 	TPMA_ALGORITHM_SIGNING    AlgorithmAttribute = 0x0100
 	TPMA_ALGORITHM_ENCRYPTING AlgorithmAttribute = 0x0200
 	TPMA_ALGORITHM_METHOD     AlgorithmAttribute = 0x0400
+)
+
+// Elliptic curve constants.
+const (
+	TPM2_ECC_NONE      EllipticCurve = 0x0000
+	TPM2_ECC_NIST_P192 EllipticCurve = 0x0001
+	TPM2_ECC_NIST_P224 EllipticCurve = 0x0002
+	TPM2_ECC_NIST_P256 EllipticCurve = 0x0003
+	TPM2_ECC_NIST_P384 EllipticCurve = 0x0004
+	TPM2_ECC_NIST_P521 EllipticCurve = 0x0005
+	TPM2_ECC_BN_P256   EllipticCurve = 0x0010
+	TPM2_ECC_BN_P638   EllipticCurve = 0x0011
+	TPM2_ECC_SM2_P256  EllipticCurve = 0x0020
 )
 
 // Handle type constants.
@@ -653,6 +669,32 @@ var stringToCmd = map[string]Command{
 	"TPM2_CC_Vendor_TCG_Test":            TPM2_CC_Vendor_TCG_Test,
 }
 
+// curveToString maps EllipticCurve values to their string representations.
+var curveToString = map[EllipticCurve]string{
+	TPM2_ECC_NONE:      "TPM2_ECC_NONE",
+	TPM2_ECC_NIST_P192: "TPM2_ECC_NIST_P192",
+	TPM2_ECC_NIST_P224: "TPM2_ECC_NIST_P224",
+	TPM2_ECC_NIST_P256: "TPM2_ECC_NIST_P256",
+	TPM2_ECC_NIST_P384: "TPM2_ECC_NIST_P384",
+	TPM2_ECC_NIST_P521: "TPM2_ECC_NIST_P521",
+	TPM2_ECC_BN_P256:   "TPM2_ECC_BN_P256",
+	TPM2_ECC_BN_P638:   "TPM2_ECC_BN_P638",
+	TPM2_ECC_SM2_P256:  "TPM2_ECC_SM2_P256",
+}
+
+// stringToCurve maps EllipticCurve string representations to their values.
+var stringToCurve = map[string]EllipticCurve{
+	"TPM2_ECC_NONE":      TPM2_ECC_NONE,
+	"TPM2_ECC_NIST_P192": TPM2_ECC_NIST_P192,
+	"TPM2_ECC_NIST_P224": TPM2_ECC_NIST_P224,
+	"TPM2_ECC_NIST_P256": TPM2_ECC_NIST_P256,
+	"TPM2_ECC_NIST_P384": TPM2_ECC_NIST_P384,
+	"TPM2_ECC_NIST_P521": TPM2_ECC_NIST_P521,
+	"TPM2_ECC_BN_P256":   TPM2_ECC_BN_P256,
+	"TPM2_ECC_BN_P638":   TPM2_ECC_BN_P638,
+	"TPM2_ECC_SM2_P256":  TPM2_ECC_SM2_P256,
+}
+
 // handleTypeToString maps HandleType values to their string representations.
 var handleTypeToString = map[HandleType]string{
 	TPM2_HT_PCR:            "TPM2_HT_PCR",
@@ -854,6 +896,45 @@ func (c *Command) UnmarshalJSON(b []byte) error {
 	v, ok := stringToCmd[s]
 	if !ok {
 		return fmt.Errorf("invalid command value: %s", s)
+	}
+
+	*c = v
+
+	return nil
+}
+
+// String returns a string representation of a value.
+func (c EllipticCurve) String() string {
+	s, ok := curveToString[c]
+	if !ok {
+		return "UNKNOWN ELLIPTIC CURVE VALUE"
+	}
+
+	return s
+}
+
+// MarshalJSON returns the JSON-encoding of a value.
+func (c EllipticCurve) MarshalJSON() ([]byte, error) {
+	s, ok := curveToString[c]
+	if !ok {
+		return nil, fmt.Errorf("invalid elliptic curve value: %d", c)
+	}
+
+	return json.Marshal(s)
+}
+
+// UnmarshalJSON parses a JSON-encoded value and stores the result in the
+// object.
+func (c *EllipticCurve) UnmarshalJSON(b []byte) error {
+	var s string
+
+	if err := json.Unmarshal(b, &s); err != nil {
+		return err
+	}
+
+	v, ok := stringToCurve[s]
+	if !ok {
+		return fmt.Errorf("invalid elliptic curve value: %s", s)
 	}
 
 	*c = v
