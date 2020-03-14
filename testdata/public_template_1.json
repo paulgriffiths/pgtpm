@@ -1,0 +1,12 @@
+{
+    "type": "TPM2_ALG_RSA",
+    "name_alg": "TPM2_ALG_SHA256",
+    "attributes": [
+        "TPMA_OBJECT_RESTRICTED",
+        "TPMA_OBJECT_USERWITHAUTH",
+        "TPMA_OBJECT_SIGN_ENCRYPT",
+        "TPMA_OBJECT_FIXEDTPM",
+        "TPMA_OBJECT_FIXEDPARENT",
+        "TPMA_OBJECT_SENSITIVEDATAORIGIN"
+    ]
+}
