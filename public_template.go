@@ -1,7 +1,6 @@
 package pgtpm
 
 import (
-	"encoding/binary"
 	"math/big"
 
 	"github.com/google/go-tpm/tpm2"
@@ -122,13 +121,7 @@ func (p RSAParams) ToPublic() *tpm2.RSAParams {
 	}
 
 	if p.Modulus != nil {
-		mBytes := p.Modulus.Bytes()
-
-		buf := make([]byte, len(mBytes)+2)
-		binary.BigEndian.PutUint16(buf[0:2], uint16(len(mBytes)))
-		copy(buf[2:], mBytes)
-
-		rv.ModulusRaw = tpmutil.U16Bytes(mBytes)
+		rv.ModulusRaw = tpmutil.U16Bytes(p.Modulus.Bytes())
 	}
 
 	return rv
@@ -210,23 +203,11 @@ func (s ECPoint) ToPublic() tpm2.ECPoint {
 	var rv tpm2.ECPoint
 
 	if s.X != nil {
-		nBytes := s.X.Bytes()
-
-		buf := make([]byte, len(nBytes)+2)
-		binary.BigEndian.PutUint16(buf[0:2], uint16(len(nBytes)))
-		copy(buf[2:], nBytes)
-
-		rv.XRaw = tpmutil.U16Bytes(nBytes)
+		rv.XRaw = tpmutil.U16Bytes(s.X.Bytes())
 	}
 
 	if s.Y != nil {
-		nBytes := s.Y.Bytes()
-
-		buf := make([]byte, len(nBytes)+2)
-		binary.BigEndian.PutUint16(buf[0:2], uint16(len(nBytes)))
-		copy(buf[2:], nBytes)
-
-		rv.YRaw = tpmutil.U16Bytes(nBytes)
+		rv.YRaw = tpmutil.U16Bytes(s.Y.Bytes())
 	}
 
 	return rv

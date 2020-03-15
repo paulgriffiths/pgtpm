@@ -147,8 +147,6 @@ func TestPublicTemplateToPublic(t *testing.T) {
 
 			if !reflect.DeepEqual(got, want) {
 				t.Errorf("got %v, want %v", got, want)
-				t.Errorf("got %v, want %v", got.RSAParameters, want.RSAParameters)
-				t.Errorf("got %v, want %v", got.RSAParameters.Symmetric, want.RSAParameters.Symmetric)
 			}
 		})
 	}
