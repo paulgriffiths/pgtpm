@@ -8,5 +8,51 @@
         "TPMA_OBJECT_FIXEDTPM",
         "TPMA_OBJECT_FIXEDPARENT",
         "TPMA_OBJECT_SENSITIVEDATAORIGIN"
-    ]
+    ],
+    "rsa": {
+        "symmetric": {
+            "algorithm": "TPM2_ALG_AES",
+            "key_bits": 128,
+            "mode": "TPM2_ALG_CFB"
+        },
+        "scheme": {
+            "algorithm": "TPM2_ALG_RSAPSS",
+            "hash": "TPM2_ALG_SHA256"
+        },
+        "key_bits": 2048,
+        "exponent": 65537,
+        "modulus": 102387
+    },
+    "ecc": {
+        "symmetric": {
+            "algorithm": "TPM2_ALG_AES",
+            "key_bits": 256,
+            "mode": "TPM2_ALG_OFB"
+        },
+        "scheme": {
+            "algorithm": "TPM2_ALG_ECDSA",
+            "hash": "TPM2_ALG_SHA256"
+        },
+        "elliptic_curve": "TPM2_ECC_NIST_P256",
+        "kdf": {
+            "algorithm": "TPM2_ALG_KDF1_SP800_108",
+            "hash": "TPM2_ALG_SHA384"
+        },
+        "point": {
+            "x": 42,
+            "y": 99
+        }
+    },
+    "sym_cipher": {
+        "symmetric": {
+            "algorithm": "TPM2_ALG_TDES",
+            "key_bits": 64,
+            "mode": "TPM2_ALG_CBC"
+        }
+    },
+    "keyed_hash": {
+        "algorithm": "TPM2_ALG_HMAC",
+        "hash": "TPM2_ALG_SHA512",
+        "kdf": "TPM2_ALG_KDF1_SP800_56A"
+    }
 }
