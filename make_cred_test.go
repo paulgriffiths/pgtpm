@@ -11,8 +11,6 @@ import (
 )
 
 func TestMakeCredential(t *testing.T) {
-	t.Parallel()
-
 	var testcases = []struct {
 		name  string
 		cred  []byte
@@ -54,8 +52,6 @@ func TestMakeCredential(t *testing.T) {
 		var tc = tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
 			tpm, err := simulator.Get()
 			if err != nil {
 				t.Fatalf("couldn't get TPM simulator: %v", err)
