@@ -42,7 +42,13 @@ func (k *PrivateKey) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts)
 	if k.scheme == nil || k.scheme.Alg == tpm2.AlgNull {
 		switch t := k.pubKey.(type) {
 		case *rsa.PublicKey:
-			scheme.Alg = tpm2.AlgRSASSA
+			switch opts.(type) {
+			case *rsa.PSSOptions:
+				scheme.Alg = tpm2.AlgRSAPSS
+
+			default:
+				scheme.Alg = tpm2.AlgRSASSA
+			}
 
 		case *ecdsa.PublicKey:
 			scheme.Alg = tpm2.AlgECDSA
