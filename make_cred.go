@@ -1,6 +1,7 @@
 package pgtpm
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/ecdsa"
@@ -10,6 +11,8 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
+	"encoding/binary"
+	"errors"
 	"fmt"
 	"hash"
 	"io"
@@ -55,6 +58,37 @@ func MakeCredential(cred, ekPublic, akPublic []byte) ([]byte, []byte, error) {
 	return blob, encSeed, nil
 }
 
+// ExtractCredential extracts a credential from a credential bloc and encrypted
+// seed created by MakeCredential. This function is primarily for testing and
+// demonstration purposes, since in practice the private key corresponding to
+// the TPM endorsement key public area will not be available.
+func ExtractCredential(key interface{}, blob, encSeed, ekPublic, akPublic []byte) ([]byte, error) {
+	// Decode endorsement and attestation key public areas.
+	ekPub, err := tpm2.DecodePublic(ekPublic)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode endorsement key public area: %v", err)
+	}
+
+	akPub, err := tpm2.DecodePublic(akPublic)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode attestation key public area: %v", err)
+	}
+
+	// Decrypt seed.
+	seed, err := decryptSeed(key, ekPub, encSeed)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decrypt seed: %v", err)
+	}
+
+	// Extract credential.
+	cred, err := decryptCredentialBlob(blob, ekPub, akPub, seed)
+	if err != nil {
+		return nil, fmt.Errorf("failed to extract credential: %v", err)
+	}
+
+	return cred, nil
+}
+
 // generateSeed generates a seed value and encrypts it using the public key
 // in the specified public area per TPM Library spec Section 24.
 func generateSeed(ekPub tpm2.Public) ([]byte, []byte, error) {
@@ -88,13 +122,13 @@ func generateSeed(ekPub tpm2.Public) ([]byte, []byte, error) {
 
 	var encSeed []byte
 
-	switch t := pubKey.(type) {
+	switch k := pubKey.(type) {
 	case *rsa.PublicKey:
 
 		// Per TPM Library spec Appendix B.10.4, the seed value will be OAEP
 		// encrypted to the EK public key using "IDENTITY" as the label
 		// (including the terminaing null octet per Appendix B.4.)
-		encSeed, err = rsa.EncryptOAEP(h, rand.Reader, t, seed, append([]byte(labelIdentity), 0))
+		encSeed, err = rsa.EncryptOAEP(h, rand.Reader, k, seed, append([]byte(labelIdentity), 0))
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to RSA encrypt: %v", err)
 		}
@@ -103,13 +137,44 @@ func generateSeed(ekPub tpm2.Public) ([]byte, []byte, error) {
 
 		// Per TPM Library spec Appendix C.6.4, the One-Pass Diffie-Hellman,
 		// C(1, 1, ECC CDH) method from SP800-56A shall be used.
-		return nil, nil, fmt.Errorf("ECC keys not yet supported for seed encryption")
+		return nil, nil, errors.New("ECC keys not yet supported for seed encryption")
 
 	default:
-		return nil, nil, fmt.Errorf("unsupported public key type: %v", t)
+		return nil, nil, fmt.Errorf("unsupported public key type: %T", k)
 	}
 
 	return seed, encSeed, nil
+}
+
+// decryptSeed decrypts an encrypted seed created by generateSeed. In practice
+// the decryption private key will not be available, so this function is provided
+// primarily for testing and verification.
+func decryptSeed(key interface{}, ekPub tpm2.Public, encSeed []byte) ([]byte, error) {
+	// Extract the name algorithm from the public area.
+	h, err := nameAlgHashFromPublic(ekPub)
+	if err != nil {
+		return nil, err
+	}
+
+	// Decrypt the seed based on the type of key. See comments to
+	// generateSeed.
+	var got []byte
+
+	switch k := key.(type) {
+	case *rsa.PrivateKey:
+		got, err = rsa.DecryptOAEP(h(), rand.Reader, k, encSeed, append([]byte(labelIdentity), 0))
+		if err != nil {
+			return nil, fmt.Errorf("failed to RSA decrypt: %v", err)
+		}
+
+	case *ecdsa.PrivateKey:
+		return nil, errors.New("ECC keys not yet supported for seed encryption")
+
+	default:
+		return nil, fmt.Errorf("unsupported public key type: %T", k)
+	}
+
+	return got, nil
 }
 
 // generateCredentialBlob generates an encrypted credential and HMAC per
@@ -151,9 +216,120 @@ func generateCredentialBlob(ekPub, akPub tpm2.Public, cred, seed []byte) ([]byte
 	return tpmutil.Pack(tpmutil.U16Bytes(macSum), encIdentity)
 }
 
+// decryptCredentialBlob verifies the HMAC and decrypts the credential in a
+// credential blob.
+func decryptCredentialBlob(blob []byte, ekPub, akPub tpm2.Public, seed []byte) ([]byte, error) {
+	// Compute AK name.
+	name, err := computeName(akPub)
+	if err != nil {
+		return nil, err
+	}
+
+	// Extract the name algorithm from the public area.
+	newHash, err := nameAlgHashFromPublic(ekPub)
+	if err != nil {
+		return nil, fmt.Errorf("failed to determine EK name hash algorithm: %v", err)
+	}
+
+	// Separate HMAC and encrypted identity from credentials blob, first
+	// ensuring that the blob is large enough to contain at least one 2-octet
+	// size field.
+	if len(blob) < 2 {
+		return nil, errors.New("incorrect size for credential blob")
+	}
+
+	// Decode the leading 2-octet size field of the HMAC and verify that it's
+	// appropriate for the hash algorithm.
+	hashSize := newHash().Size()
+	if gotSize := int(binary.BigEndian.Uint16(blob)); gotSize != hashSize {
+		return nil, errors.New("incorrect size for credential blob")
+	}
+
+	// Size of the credential blob should be at least the length of the HMAC,
+	// plus 2 for the HMAC size field, plus another 2 for the (encrypted)
+	// credential size field, plus 1 for a non-empty credential. Since the
+	// credential size field is encrypted, we'll have to defer checking it
+	// until after we've decrypted the credential.
+	if len(blob) < (hashSize + 5) {
+		return nil, errors.New("incorrect size for credential blob")
+	}
+
+	gotHMAC := blob[2 : hashSize+2]
+	encIdentity := blob[hashSize+2:]
+
+	// Verify the HMAC.
+	macKey, err := KDFa(newHash, seed, labelIntegrity, nil, hashSize)
+	if err != nil {
+		return nil, fmt.Errorf("failed to derive integrity key: %v", err)
+	}
+
+	mac := hmac.New(newHash, macKey)
+	mac.Write(encIdentity)
+	mac.Write(name)
+
+	if !bytes.Equal(gotHMAC, mac.Sum(nil)) {
+		return nil, errors.New("failed to verify HMAC")
+	}
+
+	// Decrypt credential.
+	cred, err := decryptCredential(encIdentity, ekPub, newHash, seed, name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decrypt credential: %v", err)
+	}
+
+	return cred, nil
+}
+
 // encryptCredential encrypts a credential using the appropriate symmetric
 // algorithm specified in a public area.
 func encryptCredential(pub tpm2.Public, h func() hash.Hash, cred, seed, name []byte) ([]byte, error) {
+	// Create an appropriate symmetric cipher.
+	cphr, err := cipherFromPublic(pub, h, seed, name)
+	if err != nil {
+		return nil, err
+	}
+
+	// Prepend a 2-octet size field to the credential prior to encryption.
+	plain, err := tpmutil.Pack(tpmutil.U16Bytes(cred))
+	if err != nil {
+		return nil, err
+	}
+
+	// Encrypt and return. Per TPM Spec Part 1 24.4, the encryption of the
+	// credential uses the symmetric algorithm specified by the EK in CFB
+	// mode with a zero IV.
+	enc := make([]byte, len(plain))
+	cipher.NewCFBEncrypter(cphr, make([]byte, cphr.BlockSize())).XORKeyStream(enc, plain)
+
+	return enc, nil
+}
+
+// decryptCredential decrypts a credential using the appropriate symmetric
+// algorithm specified in a public area.
+func decryptCredential(encIdentity []byte, ekPub tpm2.Public, h func() hash.Hash, seed, name []byte) ([]byte, error) {
+	// Create an appropriate symmetric cipher.
+	cphr, err := cipherFromPublic(ekPub, h, seed, name)
+	if err != nil {
+		return nil, err
+	}
+
+	// Decrypt. Per TPM Spec Part 1 24.4, the encryption of the credential
+	// uses the symmetric algorithm specified by the EK in CFB mode with a
+	// zero IV.
+	dec := make([]byte, len(encIdentity))
+	cipher.NewCFBDecrypter(cphr, make([]byte, cphr.BlockSize())).XORKeyStream(dec, encIdentity)
+
+	// Verify leading 2-octet size field, then strip it from the returned
+	// credential.
+	if int(binary.BigEndian.Uint16(dec)) != len(encIdentity)-2 {
+		return nil, errors.New("incorrect size for encIdentity")
+	}
+
+	return dec[2:], nil
+}
+
+// cipherFromPublic returns a block cipher appropriate for a given storage key.
+func cipherFromPublic(pub tpm2.Public, h func() hash.Hash, seed, name []byte) (cipher.Block, error) {
 	// Extract symmetric encryption scheme from public area.
 	var sym *tpm2.SymScheme
 
@@ -173,7 +349,7 @@ func encryptCredential(pub tpm2.Public, h func() hash.Hash, cred, seed, name []b
 
 	switch Algorithm(sym.Alg) {
 	case TPM2_ALG_AES:
-		symKey, err := KDFa(h, seed, labelStorage, name, aes.BlockSize)
+		symKey, err := KDFa(h, seed, labelStorage, name, int(sym.KeyBits/8))
 		if err != nil {
 			return nil, fmt.Errorf("failed to derive storage key: %v", err)
 		}
@@ -187,16 +363,7 @@ func encryptCredential(pub tpm2.Public, h func() hash.Hash, cred, seed, name []b
 		return nil, fmt.Errorf("unsupported symmetric algorithm: %s", Algorithm(sym.Alg).String())
 	}
 
-	// Encrypt credential.
-	cred, err := tpmutil.Pack(tpmutil.U16Bytes(cred))
-	if err != nil {
-		return nil, err
-	}
-
-	enc := make([]byte, len(cred))
-	cipher.NewCFBEncrypter(cphr, make([]byte, cphr.BlockSize())).XORKeyStream(enc, cred)
-
-	return enc, nil
+	return cphr, nil
 }
 
 // nameAlgHashFromPublic extracts the name algorithm from a public area and

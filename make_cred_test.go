@@ -18,8 +18,8 @@ func TestMakeCredential(t *testing.T) {
 		akPub tpm2.Public
 	}{
 		{
-			name: "RSA",
-			cred: []byte(`Hello, world!'`),
+			name: "RSA/AES128",
+			cred: []byte(`Hello, world!`),
 			ekPub: tpm2.Public{
 				Type:       tpm2.AlgRSA,
 				NameAlg:    tpm2.AlgSHA256,
@@ -28,6 +28,35 @@ func TestMakeCredential(t *testing.T) {
 					Symmetric: &tpm2.SymScheme{
 						Alg:     tpm2.AlgAES,
 						KeyBits: 128,
+						Mode:    tpm2.AlgCFB,
+					},
+					KeyBits: 2048,
+				},
+			},
+			akPub: tpm2.Public{
+				Type:       tpm2.AlgRSA,
+				NameAlg:    tpm2.AlgSHA256,
+				Attributes: tpm2.FlagSignerDefault,
+				RSAParameters: &tpm2.RSAParams{
+					Sign: &tpm2.SigScheme{
+						Alg:  tpm2.AlgRSAPSS,
+						Hash: tpm2.AlgSHA256,
+					},
+					KeyBits: 2048,
+				},
+			},
+		},
+		{
+			name: "RSA/AES256",
+			cred: []byte(`"Commonplace, Watson."`),
+			ekPub: tpm2.Public{
+				Type:       tpm2.AlgRSA,
+				NameAlg:    tpm2.AlgSHA256,
+				Attributes: tpm2.FlagStorageDefault,
+				RSAParameters: &tpm2.RSAParams{
+					Symmetric: &tpm2.SymScheme{
+						Alg:     tpm2.AlgAES,
+						KeyBits: 256,
 						Mode:    tpm2.AlgCFB,
 					},
 					KeyBits: 2048,
