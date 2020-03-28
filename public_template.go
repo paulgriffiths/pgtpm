@@ -4,7 +4,6 @@ import (
 	"math/big"
 
 	"github.com/google/go-tpm/tpm2"
-	"github.com/google/go-tpm/tpmutil"
 )
 
 // PublicTemplate marshals/unmarshals to/from the JSON-encoding of a
@@ -122,16 +121,13 @@ func (p RSAParams) ToPublic() *tpm2.RSAParams {
 		rv.Sign = p.Sign.ToPublic()
 	}
 
+	// For endorsement key templates, the RSA unique value is a slice of zero
+	// octets of equal size to the number of key bits. To allow zero (or a
+	// smaller number) to be specified in the template without explicitly
+	// writing all the zero bytes, if a value is specified we make it a fixed
+	// number of bytes based on the key bits.
 	if p.Modulus != nil {
-		mLen := int(p.KeyBits) / 8
-		pLen := len(p.Modulus.Bytes())
-
-		rv.ModulusRaw = make([]byte, mLen)
-		if pLen >= mLen {
-			copy(rv.ModulusRaw, p.Modulus.Bytes())
-		} else {
-			copy(rv.ModulusRaw[mLen-pLen:mLen], p.Modulus.Bytes())
-		}
+		rv.ModulusRaw = bigIntToFixedSizeBytes(p.Modulus, int(p.KeyBits/8))
 	}
 
 	return rv
@@ -156,7 +152,7 @@ func (p ECCParams) ToPublic() *tpm2.ECCParams {
 	}
 
 	if p.Point != nil {
-		rv.Point = p.Point.ToPublic()
+		rv.Point = p.Point.ToPublic(tpm2.EllipticCurve(p.CurveID))
 	}
 
 	return rv
@@ -209,16 +205,55 @@ func (s KDFScheme) ToPublic() *tpm2.KDFScheme {
 }
 
 // ToPublic converts to a corresponding tpm2 object.
-func (s ECPoint) ToPublic() tpm2.ECPoint {
+func (s ECPoint) ToPublic(id tpm2.EllipticCurve) tpm2.ECPoint {
 	var rv tpm2.ECPoint
 
-	if s.X != nil {
-		rv.XRaw = tpmutil.U16Bytes(s.X.Bytes())
+	// For endorsement key templates, the ECC unique value is a slice of zero
+	// octets of equal size to the number of key bits. To allow zero (or a
+	// smaller number) to be specified in the template without explicitly
+	// writing all the zero bytes, if a value is specified we make it a fixed
+	// number of bytes depending on the curve type.
+	var size int
+	switch id {
+	case tpm2.CurveNISTP192:
+		size = 24
+
+	case tpm2.CurveNISTP224:
+		size = 28
+
+	case tpm2.CurveNISTP256, tpm2.CurveBNP256, tpm2.CurveSM2P256:
+		size = 32
+
+	case tpm2.CurveNISTP384:
+		size = 48
+
+	case tpm2.CurveNISTP521:
+		size = 66
+
+	case tpm2.CurveBNP638:
+		size = 80
 	}
 
-	if s.Y != nil {
-		rv.YRaw = tpmutil.U16Bytes(s.Y.Bytes())
+	if s.X != nil && size != 0 {
+		rv.XRaw = bigIntToFixedSizeBytes(s.X, size)
+	}
+
+	if s.Y != nil && size != 0 {
+		rv.YRaw = bigIntToFixedSizeBytes(s.Y, size)
 	}
 
 	return rv
+}
+
+func bigIntToFixedSizeBytes(n *big.Int, size int) []byte {
+	b := make([]byte, size)
+	l := len(n.Bytes())
+
+	if l >= size {
+		copy(b, n.Bytes())
+	} else {
+		copy(b[size-l:size], n.Bytes())
+	}
+
+	return b
 }
