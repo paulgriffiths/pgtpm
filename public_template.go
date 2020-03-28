@@ -79,8 +79,9 @@ type ECPoint struct {
 // ToPublic converts to a corresponding tpm2 object.
 func (t PublicTemplate) ToPublic() tpm2.Public {
 	rv := tpm2.Public{
-		Type:    tpm2.Algorithm(t.Type),
-		NameAlg: tpm2.Algorithm(t.NameAlg),
+		Type:       tpm2.Algorithm(t.Type),
+		NameAlg:    tpm2.Algorithm(t.NameAlg),
+		AuthPolicy: t.AuthPolicy,
 	}
 
 	for _, p := range t.Attributes {
