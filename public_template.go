@@ -13,6 +13,7 @@ type PublicTemplate struct {
 	Type                Algorithm         `json:"type"`
 	NameAlg             Algorithm         `json:"name_alg"`
 	Attributes          []ObjectAttribute `json:"attributes,omitempty"`
+	AuthPolicy          []byte            `json:"auth_policy,omitempty"`
 	RSAParameters       *RSAParams        `json:"rsa,omitempty"`
 	ECCParameters       *ECCParams        `json:"ecc,omitempty"`
 	SymCipherParameters *SymCipherParams  `json:"sym_cipher,omitempty"`
@@ -121,7 +122,15 @@ func (p RSAParams) ToPublic() *tpm2.RSAParams {
 	}
 
 	if p.Modulus != nil {
-		rv.ModulusRaw = tpmutil.U16Bytes(p.Modulus.Bytes())
+		mLen := int(p.KeyBits) / 8
+		pLen := len(p.Modulus.Bytes())
+
+		rv.ModulusRaw = make([]byte, mLen)
+		if pLen >= mLen {
+			copy(rv.ModulusRaw, p.Modulus.Bytes())
+		} else {
+			copy(rv.ModulusRaw[mLen-pLen:mLen], p.Modulus.Bytes())
+		}
 	}
 
 	return rv
