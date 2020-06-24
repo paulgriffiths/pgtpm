@@ -1,12 +1,14 @@
 # pgtpm
 
+[![Build Status](https://travis-ci.org/paulgriffiths/pgtpm.svg?branch=master)](https://travis-ci.org/paulgriffiths/pgtpm)
+
 Package pgtpm provides TPM (Trusted Platform Module) 2.0 utilities, including:
 
  * An implementation of crypto.Signer allowing a TPM-resident private key to
    be used for signing certificate requests, certificates, and certificate
    revocation lists, for TLS client and server authentication, etc.
 
- * Standalone implementations of the SP 800-108 key derivation function and
+ * Standalone implementations of the relevant key derivation functions and
    the TPM 2.0 "make credential" operation, enabling a privacy CA to create
    encrypted credentials for activation by a TPM
 
