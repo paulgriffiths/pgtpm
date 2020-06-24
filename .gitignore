@@ -1,2 +1,6 @@
 # Test coverage files
 *.out
+
+# Temporary files
+*.swp
+*~

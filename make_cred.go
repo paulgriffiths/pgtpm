@@ -5,6 +5,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/rsa"
@@ -17,6 +18,7 @@ import (
 	"hash"
 	"io"
 
+	"github.com/aead/ecdh"
 	"github.com/google/go-tpm/tpm2"
 	"github.com/google/go-tpm/tpmutil"
 )
@@ -98,7 +100,7 @@ func generateSeed(ekPub tpm2.Public) ([]byte, []byte, error) {
 		return nil, nil, fmt.Errorf("failed to determine EK name hash algorithm: %v", err)
 	}
 
-	// Generate a random seed value. Per TPM Library spec Appendix B.10.3, for
+	// Calculate the seed size. Per TPM Library spec Appendix B.10.3, for
 	// RSA keys the seed size will be the size of a digest produced by the OAEP
 	// hash algorithm of the endorsement key, and per TPM Library Spec Appendix
 	// C.6.1, for ECC keys the seed size will be the size of a digest produced
@@ -107,27 +109,30 @@ func generateSeed(ekPub tpm2.Public) ([]byte, []byte, error) {
 	// generate a random seed of that size.
 	h := newHash()
 	seedSize := h.Size()
-	seed := make([]byte, seedSize)
-	if n, err := io.ReadFull(rand.Reader, seed); err != nil {
-		return nil, nil, fmt.Errorf("failed to generate random bytes: %v", err)
-	} else if n != seedSize {
-		return nil, nil, fmt.Errorf("generated %d random bytes, expected %d", n, seedSize)
-	}
 
-	// Encrypt the seed according to the type of the EK public key.
+	// Extract the EK public key.
 	pubKey, err := ekPub.Key()
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to extract EK public key: %v", err)
 	}
 
+	var seed []byte
 	var encSeed []byte
 
 	switch k := pubKey.(type) {
 	case *rsa.PublicKey:
 
+		// Generate a random seed value per TPM Library Spec Annex B.10.4.
+		seed = make([]byte, seedSize)
+		if n, err := io.ReadFull(rand.Reader, seed); err != nil {
+			return nil, nil, fmt.Errorf("failed to generate random bytes: %v", err)
+		} else if n != seedSize {
+			return nil, nil, fmt.Errorf("generated %d random bytes, expected %d", n, seedSize)
+		}
+
 		// Per TPM Library spec Appendix B.10.4, the seed value will be OAEP
 		// encrypted to the EK public key using "IDENTITY" as the label
-		// (including the terminaing null octet per Appendix B.4.)
+		// (including the terminaing null octet per Annex B.4.)
 		encSeed, err = rsa.EncryptOAEP(h, rand.Reader, k, seed, append([]byte(labelIdentity), 0))
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to RSA encrypt: %v", err)
@@ -135,9 +140,51 @@ func generateSeed(ekPub tpm2.Public) ([]byte, []byte, error) {
 
 	case *ecdsa.PublicKey:
 
-		// Per TPM Library spec Appendix C.6.4, the One-Pass Diffie-Hellman,
+		// Per TPM Library spec Annex C.6.4, the One-Pass Diffie-Hellman,
 		// C(1, 1, ECC CDH) method from SP800-56A shall be used.
-		return nil, nil, errors.New("ECC keys not yet supported for seed encryption")
+
+		// Generate a ECDH object for the appropriate curve.
+		ke, err := makeKeyExchange(ekPub)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		// Generate ephemeral private key.
+		eph, ephPub, err := ke.GenerateKey(rand.Reader)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to generate ephemeral ECC key: %v", err)
+		}
+
+		// Convert and check peer key.
+		peerKey := ecdh.Point{
+			X: k.X,
+			Y: k.Y,
+		}
+		if err := ke.Check(peerKey); err != nil {
+			return nil, nil, fmt.Errorf("public key cannot be used for ECDH: %v", err)
+		}
+
+		// Compute the ECDH secret.
+		z := ke.ComputeSecret(eph, peerKey)
+
+		ephPoint := ephPub.(ecdh.Point)
+
+		// Derive the seed from the ECDH secret.
+		seed, err = KDFe(newHash, z, labelIdentity, ephPoint.X.Bytes(), k.X.Bytes(), seedSize)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to calculate ECDH seed: %v", err)
+		}
+
+		// Pack the ephemeral public point as the "encrypted" seed.
+		encSeed, err = tpmutil.Pack(
+			tpm2.ECPoint{
+				XRaw: ephPoint.X.Bytes(),
+				YRaw: ephPoint.Y.Bytes(),
+			},
+		)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to pack EC point: %v", err)
+		}
 
 	default:
 		return nil, nil, fmt.Errorf("unsupported public key type: %T", k)
@@ -168,7 +215,36 @@ func decryptSeed(key interface{}, ekPub tpm2.Public, encSeed []byte) ([]byte, er
 		}
 
 	case *ecdsa.PrivateKey:
-		return nil, errors.New("ECC keys not yet supported for seed encryption")
+
+		// Generate a ECDH object for the appropriate curve.
+		ke, err := makeKeyExchange(ekPub)
+		if err != nil {
+			return nil, err
+		}
+
+		// Extract, convert and check peer key.
+		var ep tpm2.ECPoint
+
+		if n, err := tpmutil.Unpack(encSeed, &ep); err != nil || n != len(encSeed) {
+			return nil, fmt.Errorf("failed to unpack EC point: %v", err)
+		}
+
+		peerKey := ecdh.Point{
+			X: ep.X(),
+			Y: ep.Y(),
+		}
+		if err := ke.Check(peerKey); err != nil {
+			return nil, fmt.Errorf("public key cannot be used for ECDH: %v", err)
+		}
+
+		// Compute the ECDH secret.
+		z := ke.ComputeSecret(k.D.Bytes(), peerKey)
+
+		// Derive the seed from the ECDH secret.
+		got, err = KDFe(h, z, labelIdentity, peerKey.X.Bytes(), k.PublicKey.X.Bytes(), h().Size())
+		if err != nil {
+			return nil, fmt.Errorf("failed to calculate ECDH seed: %v", err)
+		}
 
 	default:
 		return nil, fmt.Errorf("unsupported public key type: %T", k)
@@ -400,4 +476,33 @@ func computeName(pub tpm2.Public) ([]byte, error) {
 	}
 
 	return nameBytes[sizeFieldLen:], nil
+}
+
+// makeKeyExchange builds and returned an appropriate ECDH key exchange
+// object for the provided key.
+func makeKeyExchange(pub tpm2.Public) (ecdh.KeyExchange, error) {
+	var ke ecdh.KeyExchange
+
+	if pub.Type != tpm2.AlgECC || pub.ECCParameters == nil {
+		return ke, errors.New("not an ECC key")
+	}
+
+	switch pub.ECCParameters.CurveID {
+	case tpm2.CurveNISTP224:
+		ke = ecdh.Generic(elliptic.P224())
+
+	case tpm2.CurveNISTP256:
+		ke = ecdh.Generic(elliptic.P256())
+
+	case tpm2.CurveNISTP384:
+		ke = ecdh.Generic(elliptic.P384())
+
+	case tpm2.CurveNISTP521:
+		ke = ecdh.Generic(elliptic.P521())
+
+	default:
+		return ke, fmt.Errorf("unsupported curve ID: %d", pub.ECCParameters.CurveID)
+	}
+
+	return ke, nil
 }

@@ -3,6 +3,7 @@ package pgtpm_test
 import (
 	"bytes"
 	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
 	"errors"
@@ -42,6 +43,27 @@ func TestMakeAndExtractCredential(t *testing.T) {
 			cred:    []byte(`"Commonplace, Watson."`),
 			ek:      mustGenerateRSAKey(t),
 			ak:      mustGenerateRSAKey(t),
+			keyBits: 256,
+		},
+		{
+			name:    "ECC/AES128",
+			cred:    []byte(`Hello, Moon!`),
+			ek:      mustGenerateECCKey(t),
+			ak:      mustGenerateECCKey(t),
+			keyBits: 128,
+		},
+		{
+			name:    "ECC/AES192",
+			cred:    []byte(`perestroika`),
+			ek:      mustGenerateECCKey(t),
+			ak:      mustGenerateECCKey(t),
+			keyBits: 192,
+		},
+		{
+			name:    "ECC/AES256",
+			cred:    []byte(`eiffel tower`),
+			ek:      mustGenerateECCKey(t),
+			ak:      mustGenerateECCKey(t),
 			keyBits: 256,
 		},
 	}
@@ -133,6 +155,17 @@ func mustGenerateRSAKey(t *testing.T) interface{} {
 	return key
 }
 
+func mustGenerateECCKey(t *testing.T) interface{} {
+	t.Helper()
+
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatalf("failed to generate ECC key: %v", err)
+	}
+
+	return key
+}
+
 func storagePublicAreaFromKey(t *testing.T, key interface{}, keyBits uint16) []byte {
 	t.Helper()
 
@@ -156,7 +189,7 @@ func storagePublicAreaFromKey(t *testing.T, key interface{}, keyBits uint16) []b
 		}
 
 	case *ecdsa.PrivateKey:
-		pub.Type = tpm2.AlgRSA
+		pub.Type = tpm2.AlgECC
 		pub.ECCParameters = &tpm2.ECCParams{
 			Symmetric: &tpm2.SymScheme{
 				Alg:     tpm2.AlgAES,

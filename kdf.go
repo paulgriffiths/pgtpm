@@ -19,6 +19,15 @@ func KDFa(h func() hash.Hash, key []byte, label string, context []byte, numbytes
 	return kdfCounter(h, key, nil, fixed, uint32(numbytes), 4)
 }
 
+// KDFe implements the KDFe function per the TPM2.0 spec.
+func KDFe(h func() hash.Hash, z []byte, label string, partyU, partyV []byte, numbytes int) ([]byte, error) {
+	var fixed = append([]byte(label), 0x00)
+	fixed = append(fixed, partyU...)
+	fixed = append(fixed, partyV...)
+
+	return kdfConcat(h, z, fixed, uint32(numbytes))
+}
+
 // kdfCounter implements a key derivation function in counter mode, as defined
 // by NIST SP 800-108. Fixed data may be place before or after the counter, or
 // both. l is the number of requested bytes, and r is the size, in bytes, of
@@ -55,6 +64,41 @@ func kdfCounter(h func() hash.Hash, key, before, after []byte, l, r uint32) ([]b
 		mac.Write(after)
 
 		out = append(out, mac.Sum(nil)...)
+	}
+
+	// Return only the requested number of bytes.
+	return out[:l], nil
+}
+
+// kdfConcat implements a one-step key derivation function using option one
+// for the auxiliary function (hash only), as defined by SP800-5C section 4.
+// l is the number of requested bytes.
+func kdfConcat(h func() hash.Hash, z, fixed []byte, l uint32) ([]byte, error) {
+
+	// Calculate number of iterations required.
+	var hashSize = uint32(h().Size())
+	var n = l / hashSize
+	if l%hashSize != 0 {
+		n++
+	}
+
+	// Number of iterations shall not exceed (2^32)-1, per SP800-5C section 4.1.
+	if uint64(n) > ((2 ^ uint64(32)) - 1) {
+		return nil, fmt.Errorf("l too large")
+	}
+
+	// Perform PRF iterations.
+	var out = make([]byte, 0, n*hashSize)
+	var cbuf = make([]byte, 4)
+	for c := uint32(1); c <= uint32(n); c++ {
+		binary.BigEndian.PutUint32(cbuf, c)
+
+		var hf = h()
+		hf.Write(cbuf)
+		hf.Write(z)
+		hf.Write(fixed)
+
+		out = append(out, hf.Sum(nil)...)
 	}
 
 	// Return only the requested number of bytes.

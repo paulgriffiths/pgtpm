@@ -75,6 +75,64 @@ func TestMakeCredential(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "ECC/AES128",
+			cred: []byte(`worm-filled`),
+			ekPub: tpm2.Public{
+				Type:       tpm2.AlgECC,
+				NameAlg:    tpm2.AlgSHA256,
+				Attributes: tpm2.FlagStorageDefault,
+				ECCParameters: &tpm2.ECCParams{
+					Symmetric: &tpm2.SymScheme{
+						Alg:     tpm2.AlgAES,
+						KeyBits: 128,
+						Mode:    tpm2.AlgCFB,
+					},
+					CurveID: tpm2.CurveNISTP256,
+				},
+			},
+			akPub: tpm2.Public{
+				Type:       tpm2.AlgRSA,
+				NameAlg:    tpm2.AlgSHA256,
+				Attributes: tpm2.FlagSignerDefault,
+				RSAParameters: &tpm2.RSAParams{
+					Sign: &tpm2.SigScheme{
+						Alg:  tpm2.AlgRSAPSS,
+						Hash: tpm2.AlgSHA256,
+					},
+					KeyBits: 2048,
+				},
+			},
+		},
+		{
+			name: "ECC/AES256",
+			cred: []byte(`trilby hat`),
+			ekPub: tpm2.Public{
+				Type:       tpm2.AlgECC,
+				NameAlg:    tpm2.AlgSHA256,
+				Attributes: tpm2.FlagStorageDefault,
+				ECCParameters: &tpm2.ECCParams{
+					Symmetric: &tpm2.SymScheme{
+						Alg:     tpm2.AlgAES,
+						KeyBits: 256,
+						Mode:    tpm2.AlgCFB,
+					},
+					CurveID: tpm2.CurveNISTP256,
+				},
+			},
+			akPub: tpm2.Public{
+				Type:       tpm2.AlgRSA,
+				NameAlg:    tpm2.AlgSHA256,
+				Attributes: tpm2.FlagSignerDefault,
+				RSAParameters: &tpm2.RSAParams{
+					Sign: &tpm2.SigScheme{
+						Alg:  tpm2.AlgRSAPSS,
+						Hash: tpm2.AlgSHA256,
+					},
+					KeyBits: 2048,
+				},
+			},
+		},
 	}
 
 	for _, tc := range testcases {
