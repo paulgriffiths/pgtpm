@@ -60,6 +60,30 @@ func MakeCredential(cred, ekPublic, akPublic []byte) ([]byte, []byte, error) {
 	return blob, encSeed, nil
 }
 
+// MakeCredentialUsingName uses the AK name directly and does not try to
+// compute it. The credential blob and the encrypted seed are returned.
+func MakeCredential(cred, ekPublic, akName []byte) ([]byte, []byte, error) {
+	// Decode endorsement and attestation key public areas.
+	ekPub, err := tpm2.DecodePublic(ekPublic)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to decode endorsement key public area: %v", err)
+	}
+
+	// Generate seed and EK-encrypted seed.
+	seed, encSeed, err := generateSeed(ekPub)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to generate seed: %v", err)
+	}
+
+	// Generate credential blob.
+	blob, err := generateCredentialBlobUsingName(ekPub, akName, cred, seed)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to generate credential blob: %v", err)
+	}
+
+	return blob, encSeed, nil
+}
+
 // ExtractCredential extracts a credential from a credential bloc and encrypted
 // seed created by MakeCredential. This function is primarily for testing and
 // demonstration purposes, since in practice the private key corresponding to
@@ -270,6 +294,39 @@ func generateCredentialBlob(ekPub, akPub tpm2.Public, cred, seed []byte) ([]byte
 
 	// Encrypt credential.
 	encIdentity, err := encryptCredential(ekPub, newHash, cred, seed, name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to encrypt credential value: %v", err)
+	}
+
+	// Compute the HMAC key. Per TPM Library spec Section 24.5, the number of
+	// bytes in the key should be equal to the size of the digest produced
+	// by the hash algorithm used.
+	macKey, err := KDFa(newHash, seed, labelIntegrity, nil, newHash().Size())
+	if err != nil {
+		return nil, fmt.Errorf("failed to derive integrity key: %v", err)
+	}
+
+	// Compute the HMAC
+	mac := hmac.New(newHash, macKey)
+	mac.Write(encIdentity)
+	mac.Write(name)
+	macSum := mac.Sum(nil)
+
+	// Create and return the credential blob.
+	return tpmutil.Pack(tpmutil.U16Bytes(macSum), encIdentity)
+}
+
+// generateCredentialBlobUsingName uses the provided AK name and does not try
+// to compute it from AK publicArea. Generates an encrypted credential and HMAC
+func generateCredentialBlobUsingName(ekPub tpm2.Public, akName []byte, cred, seed []byte) ([]byte, error) {
+	// Extract the name algorithm from the public area.
+	newHash, err := nameAlgHashFromPublic(ekPub)
+	if err != nil {
+		return nil, fmt.Errorf("failed to determine EK name hash algorithm: %v", err)
+	}
+
+	// Encrypt credential.
+	encIdentity, err := encryptCredential(ekPub, newHash, cred, seed, akName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encrypt credential value: %v", err)
 	}
