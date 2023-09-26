@@ -62,7 +62,7 @@ func MakeCredential(cred, ekPublic, akPublic []byte) ([]byte, []byte, error) {
 
 // MakeCredentialUsingName uses the AK name directly and does not try to
 // compute it. The credential blob and the encrypted seed are returned.
-func MakeCredential(cred, ekPublic, akName []byte) ([]byte, []byte, error) {
+func MakeCredentialUsingName(cred, ekPublic, akName []byte) ([]byte, []byte, error) {
 	// Decode endorsement and attestation key public areas.
 	ekPub, err := tpm2.DecodePublic(ekPublic)
 	if err != nil {
@@ -342,7 +342,7 @@ func generateCredentialBlobUsingName(ekPub tpm2.Public, akName []byte, cred, see
 	// Compute the HMAC
 	mac := hmac.New(newHash, macKey)
 	mac.Write(encIdentity)
-	mac.Write(name)
+	mac.Write(akName)
 	macSum := mac.Sum(nil)
 
 	// Create and return the credential blob.
